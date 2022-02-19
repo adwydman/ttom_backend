@@ -1,52 +1,57 @@
+var http = require("http");
 var express = require("express");
-var moment = require("moment");
-var mongoose = require("mongoose");
 var cors = require("cors");
-const bodyParser = require("body-parser");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
-const User = require("./models/Users");
-
+var bodyParser = require("body-parser");
+const User = require("./models/User");
+var mongoose = require("mongoose");
 const keys = require("./config/Keys.js");
+const bcrypt = require("bcryptjs");
+
+var app = (module.exports.app = express());
+
 const db = keys.mongoURI;
-var app = express();
-app.use(bodyParser.json());
+var port = process.env.PORT || 3000;
+var server = http.createServer(app);
+var IO = require("socket.io")(server); //pass a http.Server instance
+server.listen(port, () => {
+  console.log("listening on port 3000");
+});
+
 app.use(cors());
-app.use(express.static("uploads"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
 mongoose
-  .connect(db, { useNewUrlParser: true })
+  .connect(db, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("MongoDB successfully connected"))
   .catch((err) => console.log(err));
-
 app.get("/", (req, res) => {
-  res.send("Hi there");
+  res.send("yo connected");
 });
 app.post("/login", (req, res) => {
-  let email = req.body.user;
-  let password = req.body.password;
-  User.findOne({ email }).then((user) => {
-    // Check if user exists
+  const email = req.body.email;
+  const password = req.body.password;
+  console.log(email);
+  User.findOne({ email }, (error, user) => {
+    console.log(user);
     if (!user) {
-      return res.json({ emailnotfound: "Email not found" });
+      return res.status(200).json({ passwordincorrect: "Password incorrect" });
     }
-
-    // Check password
     bcrypt.compare(password, user.password).then((isMatch) => {
       if (isMatch) {
-        // User matched
-        // Create JWT Payload
         const payload = {
           id: user.id,
           name: user.name,
           status: user.status,
         };
-        // Sign token
         jwt.sign(
           payload,
-          keys.secretOrKey,
           {
             expiresIn: 31556926, // 1 year in seconds
           },
@@ -59,27 +64,30 @@ app.post("/login", (req, res) => {
         );
       } else {
         return res
-          .status(400)
+          .status(200)
           .json({ passwordincorrect: "Password incorrect" });
       }
     });
   });
 });
-
 app.post("/register", (req, res) => {
-  console.log(req.body);
+  // Form validation
+
+  const { errors, isValid } = validateRegisterInput(req.body);
+
+  // Check validation
+  if (!isValid) {
+    return res.status(400).json(errors);
+  }
+
   User.findOne({ email: req.body.email }).then((user) => {
     if (user) {
-      return res.json({ error: "Email already exists" });
+      return res.status(400).json({ email: "Email already exists" });
     } else {
       const newUser = new User({
-        first_name: req.body.fname,
-        last_name: req.body.lname,
         email: req.body.email,
         password: req.body.password,
       });
-
-      // Hash password before saving in database
       bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(newUser.password, salt, (err, hash) => {
           if (err) throw err;
@@ -87,7 +95,7 @@ app.post("/register", (req, res) => {
           newUser
             .save()
             .then((user) => {
-              res.json({ user: user, success: "Successfully Registered" });
+              res.json(user);
             })
             .catch((err) => console.log(err));
         });
@@ -96,33 +104,27 @@ app.post("/register", (req, res) => {
   });
 });
 
-app.get("/googleLogin", (req, res) => {});
+IO.on("connection", (socket) => {
+  console.log("new User connected");
 
-app.get("/faceBookLogin", (req, res) => {});
-app.get("/getUserStories", (req, res) => {
-  let user = req.body.user;
-  User.findOne({ user }).then((res2) => {
-    let stories = res2.stories;
-    res.json(stories);
+  socket.on("newMsg", (message) => {
+    IO.emit("message", {
+      from: message.from,
+      text: message.text,
+      video: message.videoTag,
+      createdAt: new Date().toLocaleTimeString(),
+      //code: message.timeCode
+    });
+  });
+
+  socket.on("newPublicMsg", (message) => {
+    IO.emit("publicMessage", {
+      from: message.from,
+      text: message.text,
+      video: message.videoTag,
+      createdAt: new Date().toLocaleTimeString(),
+    });
   });
 });
-app.get("/");
 
-var port = process.env.PORT || "3000";
-app.listen(port, () => {
-  console.log("server running at port " + port);
-});
-
-//login
-
-//signup
-
-//get stories
-
-//get profile
-
-// get authors
-
-// get subscribed stories by user/:id
-
-//get
+app.set("socketio", IO);
