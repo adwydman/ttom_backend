@@ -6,7 +6,8 @@ const User = require("./models/User");
 var mongoose = require("mongoose");
 const keys = require("./config/Keys.js");
 const bcrypt = require("bcryptjs");
-
+const StoriesList = require("./models/Stories_list");
+var XLSX = require("xlsx");
 var app = (module.exports.app = express());
 
 const db = keys.mongoURI;
@@ -37,52 +38,35 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  console.log(email);
+  console.log(email, password);
   User.findOne({ email }, (error, user) => {
-    console.log(user);
     if (!user) {
       return res.status(200).json({ passwordincorrect: "Password incorrect" });
     }
     bcrypt.compare(password, user.password).then((isMatch) => {
       if (isMatch) {
         const payload = {
-          id: user.id,
-          name: user.name,
-          status: user.status,
+          id: user._id,
+          email: user.email,
         };
-        jwt.sign(
-          payload,
-          {
-            expiresIn: 31556926, // 1 year in seconds
-          },
-          (err, token) => {
-            res.json({
-              success: true,
-              token: "Bearer " + token,
-            });
-          }
-        );
+        res.json({
+          success: true,
+          token: payload,
+        });
       } else {
         return res
           .status(200)
-          .json({ passwordincorrect: "Password incorrect" });
+          .json({ success: false, text: "Password incorrect" });
       }
     });
   });
 });
 app.post("/register", (req, res) => {
-  // Form validation
-
-  const { errors, isValid } = validateRegisterInput(req.body);
-
-  // Check validation
-  if (!isValid) {
-    return res.status(400).json(errors);
-  }
-
   User.findOne({ email: req.body.email }).then((user) => {
     if (user) {
-      return res.status(400).json({ email: "Email already exists" });
+      return res
+        .status(200)
+        .json({ status: "error", text: "Email already exists" });
     } else {
       const newUser = new User({
         email: req.body.email,
@@ -95,7 +79,9 @@ app.post("/register", (req, res) => {
           newUser
             .save()
             .then((user) => {
-              res.json(user);
+              return res
+                .status(200)
+                .json({ success: true, text: "Successful" });
             })
             .catch((err) => console.log(err));
         });
@@ -103,7 +89,46 @@ app.post("/register", (req, res) => {
     }
   });
 });
-
+app.get("/show", (req, res) => {
+  var workbook = XLSX.readFile("BestFriends_LoriTaylor_CSV.xlsx");
+  var sheet_name_list = workbook.SheetNames;
+  var xlData = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]], {
+    raw: false,
+  });
+  console.log(xlData);
+});
+app.post("/addStory", (req, res) => {
+  var workbook = XLSX.readFile("BestFriends_LoriTaylor_CSV.xlsx");
+  var sheet_name_list = workbook.SheetNames;
+  var xlData = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]], {
+    raw: false,
+  });
+  const story = new StoriesList({
+    name: "Favourites Landscape",
+    picture: "",
+    category: "Romacnce",
+    author: "Haidar Iqbal",
+    picture: "https://i.imgur.com/UPrs1EWl.jpg",
+    content: JSON.stringify(xlData),
+  });
+  story
+    .save()
+    .then((model) => res.json(model))
+    .catch((err) => console.log(err));
+});
+app.get("/getSoriesList", (req, res) => {
+  StoriesList.find({}).then((list) => {
+    res.send(list);
+  });
+});
+app.get("/getSoryDetails/:storyKey", (req, res) => {
+  let storyId = req.params.storyKey;
+  console.log(req.params);
+  StoriesList.findOne({ _id: storyId }).then((list) => {
+    console.log(list);
+    res.json(list);
+  });
+});
 IO.on("connection", (socket) => {
   console.log("new User connected");
 

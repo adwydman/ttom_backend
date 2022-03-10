@@ -3,11 +3,6 @@ const Schema = mongoose.Schema;
 
 // Create Schema
 const StoriesListSchema = new Schema({
-  story_id: {
-    type: String,
-    required: false,
-    ref: "stories_list",
-  },
   name: {
     type: String,
     required: false,
@@ -25,6 +20,10 @@ const StoriesListSchema = new Schema({
     required: false,
   },
   description: {
+    type: String,
+    required: false,
+  },
+  content: {
     type: String,
     required: false,
   },

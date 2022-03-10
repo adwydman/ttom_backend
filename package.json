@@ -17,7 +17,9 @@
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.1",
     "mongoose": "^6.1.6",
+    "node-xlsx": "^0.21.0",
     "nodemon": "^2.0.15",
-    "socket.io": "^4.4.1"
+    "socket.io": "^4.4.1",
+    "xlsx": "^0.18.3"
   }
 }
