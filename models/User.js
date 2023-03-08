@@ -1,36 +1,30 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Create Schema
 const UserSchema = new Schema({
-  name: {
-    type: String,
-    required: false,
-  },
   email: {
     type: String,
     required: true,
   },
-  picture: {
+  username: {
     type: String,
-    required: false,
-  },
-
-  mobile: {
-    type: String,
-    required: false,
-  },
-  phone: {
-    type: String,
-    required: false,
+    required: false
   },
   password: {
     type: String,
     required: true,
   },
-  status: {
+  stories: {
+    type: Array,
+    default: [],
+  },
+  type: { // reader, author
     type: String,
-    required: false,
+    required: false
+  },
+  token: {
+    type: String,
+    default: false,
   },
   updated_at: {
     type: Date,
@@ -40,14 +34,55 @@ const UserSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  loginType: {
-    type: String,
-    required: false,
-  },
-  stories: {
-    type: Array,
-    required: false,
-  },
-});
+})
+
+// Create Schema
+// const UserSchema = new Schema({
+//   name: {
+//     type: String,
+//     required: false,
+//   },
+//   email: {
+//     type: String,
+//     required: true,
+//   },
+//   picture: {
+//     type: String,
+//     required: false,
+//   },
+
+//   mobile: {
+//     type: String,
+//     required: false,
+//   },
+//   phone: {
+//     type: String,
+//     required: false,
+//   },
+//   password: {
+//     type: String,
+//     required: true,
+//   },
+//   status: {
+//     type: String,
+//     required: false,
+//   },
+//   updated_at: {
+//     type: Date,
+//     default: Date.now,
+//   },
+//   created_on: {
+//     type: Date,
+//     default: Date.now,
+//   },
+//   loginType: {
+//     type: String,
+//     required: false,
+//   },
+//   stories: {
+//     type: Array,
+//     required: false,
+//   },
+// });
 
 module.exports = User = mongoose.model("Users", UserSchema);

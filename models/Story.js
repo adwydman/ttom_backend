@@ -2,30 +2,22 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Create Schema
-const StoriesListSchema = new Schema({
+const StorySchema = new Schema({
   name: {
     type: String,
-    required: false,
+    required: true,
   },
   picture: {
     type: String,
-    required: false,
-  },
-  category: {
-    type: String,
-    required: false,
+    required: true,
   },
   author: {
     type: String,
-    required: false,
+    required: true,
   },
   description: {
     type: String,
-    required: false,
-  },
-  content: {
-    type: String,
-    required: false,
+    required: true,
   },
   updated_at: {
     type: Date,
@@ -35,6 +27,18 @@ const StoriesListSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  duration: {
+    type: String,
+    required: true,
+  },
+  categories: {
+    type: Array,
+    required: true,
+  },
+  mainCharacter: {
+    type: String,
+    required: true
+  }
 });
 
-module.exports = StoriesList = mongoose.model("StoriesList", StoriesListSchema);
+module.exports = Story = mongoose.model("Story", StorySchema);
