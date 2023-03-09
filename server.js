@@ -176,14 +176,9 @@ app.post("/addStory", (req, res) => {
 });
 
 app.get('/users', async (req, res) => {
-  const {
-    storyId
-  } = req.query;
+  const user = User.__serialize__(req.__user__);
 
-  const user = await User.find({ userId: req.__user__.id });
-  const storyAdded = user[0].stories.includes(storyId);
-
-  return res.status(200).json({ message: 'Ok', data: { storyAdded }})
+  return res.status(200).json({ user });
 })
 
 app.get('/userStoryTextMessages', async (req, res) => {
