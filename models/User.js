@@ -36,6 +36,17 @@ const UserSchema = new Schema({
   },
 })
 
+const User = mongoose.model("Users", UserSchema);
+
+User.__serialize__ = (user) => {
+  return {
+    email: user.email,
+    stories: user.stories,
+    createdAt: user.created_at,
+    token: user.token
+  };
+}
+
 // Create Schema
 // const UserSchema = new Schema({
 //   name: {
@@ -85,4 +96,4 @@ const UserSchema = new Schema({
 //   },
 // });
 
-module.exports = User = mongoose.model("Users", UserSchema);
+module.exports = User

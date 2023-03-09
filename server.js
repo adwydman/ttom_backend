@@ -13,6 +13,7 @@ const UserStoryTextMessages = require('./models/UserStoryTextMessages');
 var XLSX = require("xlsx");
 var app = (module.exports.app = express());
 var mongo = require('mongodb');
+const lodash = require('lodash');
 
 
 const db = keys.mongoURI;
@@ -95,8 +96,7 @@ app.post("/login", (req, res) => {
               res
               .status(200)
               .json({
-                status: 'success',
-                token
+                user: User.__serialize__(user)
               });
             })
         } else {
@@ -125,13 +125,17 @@ app.post("/register", async (req, res) => {
       bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(newUser.password, salt, (err, hash) => {
           if (!err) {
+            const token = crypto.randomBytes(64).toString('hex');
             newUser.password = hash;
+            newUser.token = token;
             newUser
               .save()
               .then((user) => {
                 res
-                  .status(200)
-                  .json({ success: true, text: "Successful" });
+                  .status(201)
+                  .json({
+                    user: User.__serialize__(newUser)
+                  });
               })
               .catch((err) => console.log(err));
           } else {
@@ -240,6 +244,8 @@ app.post('/userStoryTextMessages', async (req, res) => {
 
   await User.findByIdAndUpdate(req.__user__._id, { "$push": { stories: storyId }})
 
+  const updatedUser = await User.findById(req.__user__._id);
+
   const conversations = await Conversation.find({ storyId })
 
   const insertInfo = conversations.map(conversation => {
@@ -256,11 +262,9 @@ app.post('/userStoryTextMessages', async (req, res) => {
     }
   })
 
-  console.log('insertInfo', insertInfo)
-
   await UserStoryTextMessages.insertMany(insertInfo);
 
-  return res.status(201).json({ message: 'Success' })
+  return res.status(201).json({ user: User.__serialize__(updatedUser) })
 });
 
 app.put('/userStoryTextMessages', async (req, res) => {
