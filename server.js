@@ -1,31 +1,38 @@
-var http = require("http");
-var express = require("express");
-var cors = require("cors");
-var bodyParser = require("body-parser");
+const http = require("http");
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const multer = require('multer');
+const csv = require('csvtojson');
+const XLSX = require("xlsx");
+
 const User = require("./models/User");
-var mongoose = require("mongoose");
 const crypto = require('crypto');
 const keys = require("./config/Keys.js");
 const bcrypt = require("bcryptjs");
 const Story = require("./models/Story");
 const Conversation = require('./models/Conversation');
 const UserStoryTextMessages = require('./models/UserStoryTextMessages');
-var XLSX = require("xlsx");
-var app = (module.exports.app = express());
-var mongo = require('mongodb');
-const lodash = require('lodash');
 
+const loginRoute = require('./routes/login.js');
+const registerRoute = require('./routes/register.js');
+
+const app = (module.exports.app = express());
 
 const db = keys.mongoURI;
-var port = process.env.PORT || 3000;
-var server = http.createServer(app);
-var IO = require("socket.io")(server); //pass a http.Server instance
+const port = process.env.PORT || 3000;
+const server = http.createServer(app);
+const IO = require("socket.io")(server); //pass a http.Server instance
 server.listen(port, '10.0.0.74', () => {
   console.log("listening on port 3000");
 });
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
 const authenticateUser = async (req, res, next) => {
-  const nonSecurePaths = ['/', '/login', '/register'];
+  const nonSecurePaths = ['/', '/login', '/register', '/upload'];
   if (nonSecurePaths.includes(req.path)) {
     return next();
   }
@@ -77,75 +84,10 @@ mongoose
 app.get("/", (req, res) => {
   res.send("yo connected");
 });
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
 
-  User.findOne({ email }, (error, user) => {
-    if (!user) {
-      res
-        .status(404)
-        .json({ status: 'error', text: 'Incorrect username or password'});
-    } else {
-      bcrypt.compare(password, user.password).then((isMatch) => {
-        if (isMatch) {
-          const token = crypto.randomBytes(64).toString('hex');
-          user.token = token;
-          user
-            .save()
-            .then(() => {
-              res
-              .status(200)
-              .json({
-                user: User.__serialize__(user)
-              });
-            })
-        } else {
-          res
-            .status(404)
-            .json({ status: 'error', text: 'Incorrect username or password'});
-        }
-      });
-    }
-  });
-});
+app.post("/login", loginRoute);
 
-app.post("/register", async (req, res) => {
-  const { email, password } = req.body;
-
-  User.findOne({ email }).then((user) => {
-    if (user) {
-      res
-        .status(400)
-        .json({ status: "error", text: "Email already exists" });
-    } else {
-      const newUser = new User({
-        email,
-        password,
-      });
-      bcrypt.genSalt(10, (err, salt) => {
-        bcrypt.hash(newUser.password, salt, (err, hash) => {
-          if (!err) {
-            const token = crypto.randomBytes(64).toString('hex');
-            newUser.password = hash;
-            newUser.token = token;
-            newUser
-              .save()
-              .then((user) => {
-                res
-                  .status(201)
-                  .json({
-                    user: User.__serialize__(newUser)
-                  });
-              })
-              .catch((err) => console.log(err));
-          } else {
-            console.log('error', err)
-          }
-        });
-      });
-    }
-  });
-});
+app.post("/register", registerRoute);
 
 app.get("/show", (req, res) => {
   var workbook = XLSX.readFile("BestFriends_LoriTaylor_CSV.xlsx");
@@ -156,7 +98,21 @@ app.get("/show", (req, res) => {
   console.log(xlData);
 });
 
-app.post("/addStory", (req, res) => {
+app.post('/upload', upload.single('csv'), (req, res) => {
+  // Use csvtojson to parse the CSV file to JSON
+
+  csv().fromString(req.file.buffer.toString())
+    .then((json) => {
+      // Send the JSON back to the client
+      res.status(200).json({message: 'OK' });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.sendStatus(500);
+    });
+});
+
+app.post("/importStory", (req, res) => {
   // check if exists
   // var workbook = XLSX.readFile("BestFriends_LoriTaylor_CSV.xlsx");
   // var sheet_name_list = workbook.SheetNames;
@@ -224,8 +180,6 @@ app.post('/userStoryTextMessages', async (req, res) => {
   const {
     storyId
   } = req.body;
-
-  console.log('storyId', storyId)
 
   const story = await Story.findOne({ _id: storyId });
   if (!story) {
