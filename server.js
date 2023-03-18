@@ -8,15 +8,12 @@ const csv = require('csvtojson');
 const XLSX = require("xlsx");
 
 const User = require("./models/User");
-const crypto = require('crypto');
 const keys = require("./config/Keys.js");
-const bcrypt = require("bcryptjs");
 const Story = require("./models/Story");
-const Conversation = require('./models/Conversation');
-const UserStoryTextMessages = require('./models/UserStoryTextMessages');
 
-const loginRoute = require('./routes/login.js');
-const registerRoute = require('./routes/register.js');
+const loginRoute = require('./routes/login');
+const registerRoute = require('./routes/register');
+const userStoryTextMessagesRoutes = require('./routes/userStoryTextMessages');
 
 const app = (module.exports.app = express());
 
@@ -137,123 +134,9 @@ app.get('/users', async (req, res) => {
   return res.status(200).json({ user });
 })
 
-app.get('/userStoryTextMessages', async (req, res) => {
-  const {
-    storyId
-  } = req.query;
-
-  const availableUserStoryTextMessages = await UserStoryTextMessages.find({ userId: req.__user__.id, storyId: storyId })
-  // const availableUserStoryTextMessages = await UserStoryTextMessages.find({ userId: req.__user__.id, storyId: storyId, enabledAt: { $lte: new Date().toISOString() }})
-  if (!availableUserStoryTextMessages) {
-    console.log('not found')
-    return res.status(404).json({ message: 'User story conversations not found', data: null });
-  }
-
-  const conversationIds = availableUserStoryTextMessages.map(({ conversationId }) => conversationId);
-  const conversations = await Conversation.find({ _id: {
-    $in: conversationIds
-  }})
-
-  // console.log('availableUserStoryTextMessages', availableUserStoryTextMessages)
-
-  const parsedConversations = conversations.map((c, index) => {
-    const matchingUST = availableUserStoryTextMessages.find(({conversationId}) => conversationId === c._id.toString())
-
-    // if (c.message === 'For you to enjoy the show.') {
-    //   console.log('c', c)
-    //   console.log('matchingUST', matchingUST)
-    // }
-
-    return {
-      ...c['_doc'],
-      seenByUser: matchingUST.seenByUser,
-      notificationSent: matchingUST.notificationSent,
-      enabledAt: matchingUST.enabledAt,
-      order: index + 1,
-    }
-  })
-
-  return res.status(200).json({ message: 'Ok', data: parsedConversations });
-})
-
-app.post('/userStoryTextMessages', async (req, res) => {
-  const {
-    storyId
-  } = req.body;
-
-  const story = await Story.findOne({ _id: storyId });
-  if (!story) {
-    return res.status(404).json({ message: 'Story not found' });
-  }
-
-  const existingConversation = await UserStoryTextMessages.findOne({ userId: req.__user__._id })
-  if (existingConversation) {
-    return res.status(422).json({ message: 'Conversations already added for user'})
-  }
-
-  await User.findByIdAndUpdate(req.__user__._id, { "$push": { stories: storyId }})
-
-  const updatedUser = await User.findById(req.__user__._id);
-
-  const conversations = await Conversation.find({ storyId })
-
-  const insertInfo = conversations.map(conversation => {
-    const [hours, minutes, seconds] = conversation.time.split(':');
-    const enabledAt = new Date();
-    enabledAt.setHours(hours, minutes, seconds);
-    enabledAt.setDate(enabledAt.getDate() + (conversation.dayNumber - 1));
-
-    return {
-      userId: req.__user__._id,
-      storyId: storyId,
-      conversationId: conversation._id,
-      enabledAt: enabledAt,
-    }
-  })
-
-  await UserStoryTextMessages.insertMany(insertInfo);
-
-  return res.status(201).json({ user: User.__serialize__(updatedUser) })
-});
-
-app.put('/userStoryTextMessages', async (req, res) => {
-  const {
-    storyId,
-    conversationIds,
-    seenByUser,
-    notificationSent
-  } = req.body;
-
-  const story = await Story.findOne({ _id: storyId });
-  if (!story) {
-    return res.status(404).json({ message: 'Story not found' });
-  }
-
-  const user = await User.findOne({ _id: req.__user__._id })
-
-  const requestBody = {};
-  if ('seenByUser' in req.body) {
-    requestBody.seenByUser = seenByUser;
-  }
-
-  if ('notificationSent' in req.body) {
-    requestBody.notificationSent = notificationSent;
-  }
-
-
-  UserStoryTextMessages.updateMany({ conversationId: conversationIds, storyId: storyId, userId: user.id }, requestBody, function (err, docs) {
-  //   // UserStoryTextMessages.find(conversationIds, { seenByUser: true }, function (err, docs) {
-    if (err) {
-      console.log('err', err)
-    }
-
-    else {
-      console.log('Updated docs', docs)
-    }
-  })
-
-  return res.status(200).json({ message: 'Success' })
-})
+app.get('/userStoryTextMessages', userStoryTextMessagesRoutes.get);
+app.post('/userStoryTextMessages', userStoryTextMessagesRoutes.post);
+app.put('/userStoryTextMessages', userStoryTextMessagesRoutes.put)
 
 app.get('/stories', (req, res) => {
   Story.find({})
