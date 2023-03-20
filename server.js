@@ -14,13 +14,13 @@ const Story = require("./models/Story");
 const loginRoute = require('./routes/login');
 const registerRoute = require('./routes/register');
 const userStoryTextMessagesRoutes = require('./routes/userStoryTextMessages');
+const usersRoutes = require('./routes/users');
 
 const app = (module.exports.app = express());
 
 const db = keys.mongoURI;
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
-const IO = require("socket.io")(server); //pass a http.Server instance
 server.listen(port, '10.0.0.74', () => {
   console.log("listening on port 3000");
 });
@@ -128,15 +128,11 @@ app.post("/importStory", (req, res) => {
   //   .catch((err) => console.log(err));
 });
 
-app.get('/users', async (req, res) => {
-  const user = User.__serialize__(req.__user__);
-
-  return res.status(200).json({ user });
-})
+app.get('/users', usersRoutes.get)
 
 app.get('/userStoryTextMessages', userStoryTextMessagesRoutes.get);
 app.post('/userStoryTextMessages', userStoryTextMessagesRoutes.post);
-app.put('/userStoryTextMessages', userStoryTextMessagesRoutes.put)
+app.put('/userStoryTextMessages', userStoryTextMessagesRoutes.put);
 
 app.get('/stories', (req, res) => {
   Story.find({})
@@ -166,28 +162,3 @@ app.get("/getStoryDetails/:storyKey", (req, res) => {
     res.json(list);
   });
 });
-
-IO.on("connection", (socket) => {
-  console.log("new User connected");
-
-  socket.on("newMsg", (message) => {
-    IO.emit("message", {
-      from: message.from,
-      text: message.text,
-      video: message.videoTag,
-      createdAt: new Date().toLocaleTimeString(),
-      //code: message.timeCode
-    });
-  });
-
-  socket.on("newPublicMsg", (message) => {
-    IO.emit("publicMessage", {
-      from: message.from,
-      text: message.text,
-      video: message.videoTag,
-      createdAt: new Date().toLocaleTimeString(),
-    });
-  });
-});
-
-app.set("socketio", IO);
