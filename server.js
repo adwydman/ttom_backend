@@ -7,7 +7,6 @@ const multer = require('multer');
 const csv = require('csvtojson');
 const XLSX = require("xlsx");
 
-const User = require("./models/User");
 const keys = require("./config/Keys.js");
 const Story = require("./models/Story");
 
@@ -15,6 +14,7 @@ const loginRoute = require('./routes/login');
 const registerRoute = require('./routes/register');
 const userStoryTextMessagesRoutes = require('./routes/userStoryTextMessages');
 const usersRoutes = require('./routes/users');
+const hooks = require('./routes/hooks');
 
 const app = (module.exports.app = express());
 
@@ -28,24 +28,6 @@ server.listen(port, '10.0.0.74', () => {
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-const authenticateUser = async (req, res, next) => {
-  const nonSecurePaths = ['/', '/login', '/register', '/upload'];
-  if (nonSecurePaths.includes(req.path)) {
-    return next();
-  }
-
-  const userToken = req.body.userToken || req.query.userToken;
-
-  const user = await User.findOne({ token: userToken });
-  if (!user) {
-    return res.status(404).json({ message: 'User token not found' });
-  }
-
-  req.__user__ = user;
-
-  next();
-}
-
 app.use(cors());
 app.use(bodyParser.json());
 app.use(
@@ -54,7 +36,7 @@ app.use(
   })
 );
 
-app.use(authenticateUser)
+app.use(hooks.authenticateUser)
 
 mongoose
   .connect(db, {
@@ -62,19 +44,6 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => {
-    // const story = new Story({
-    //     name: "Sorry, Wrong Person",
-    //     categories: ['Comedy'],
-    //     author: "Leah Barsanti",
-    //     picture: "https://i.imgur.com/u4STAok.png",
-    //     description: "Sarah starts texting to Greta... so she thinks. Fellow these roommies through their hilarious miscommunications.",
-    //     duration: "1 week",
-    //     mainCharacter: "Sarah",
-    //   });
-    //   story
-    //     .save()
-    //     .catch((err) => console.log(err));
-
     console.log("MongoDB successfully connected")
   })
   .catch((err) => console.log(err));
@@ -161,3 +130,17 @@ app.get("/getStoryDetails/:storyKey", (req, res) => {
     res.json(list);
   });
 });
+
+
+// const story = new Story({
+//     name: "Sorry, Wrong Person",
+//     categories: ['Comedy'],
+//     author: "Leah Barsanti",
+//     picture: "https://i.imgur.com/u4STAok.png",
+//     description: "Sarah starts texting to Greta... so she thinks. Fellow these roommies through their hilarious miscommunications.",
+//     duration: "1 week",
+//     mainCharacter: "Sarah",
+//   });
+//   story
+//     .save()
+//     .catch((err) => console.log(err));
