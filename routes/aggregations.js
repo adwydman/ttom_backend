@@ -14,8 +14,8 @@ const getStoryInfo = async (userId) => {
           { $count: 'count' }
         ],
         availableMessagesCount: [
-          { $match: { enabledAt: { $lte: moment('2034-01-01T00:00:00Z').toDate() } } },
-          // { $match: { enabledAt: { $lte: moment().toDate() } } }, // enable for prod
+          // { $match: { enabledAt: { $lte: moment('2034-01-01T00:00:00Z').toDate() } } },
+          { $match: { enabledAt: { $lte: moment().toDate() } } }, // enable for prod
           { $count: 'count' }
         ],
         storyIds: [
@@ -29,8 +29,12 @@ const getStoryInfo = async (userId) => {
         _id: 0,
         storyId: { $arrayElemAt: [ '$storyIds.storyId', 0 ] },
         messagesCount: { $arrayElemAt: [ '$messagesCount.count', 0 ] },
-        seenMessagesCount: { $arrayElemAt: [ '$seenMessagesCount.count', 0 ] },
-        availableMessagesCount: { $arrayElemAt: [ '$availableMessagesCount.count', 0 ] },
+        seenMessagesCount: {
+          $ifNull: [ { $arrayElemAt: ['$seenMessagesCount.count', 0] }, 0 ]
+        },
+        availableMessagesCount: {
+          $ifNull: [ { $arrayElemAt: ['$availableMessagesCount.count', 0] }, 0 ]
+        }
       }
     }
   ])
