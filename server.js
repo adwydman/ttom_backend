@@ -83,8 +83,13 @@ app.get("/", (req, res) => {
 });
 
 app.post("/login", loginRoute);
-
 app.post("/register", registerRoute);
+
+app.get('/users', usersRoutes.get)
+
+app.get('/userStoryTextMessages', userStoryTextMessagesRoutes.get);
+app.post('/userStoryTextMessages', userStoryTextMessagesRoutes.post);
+app.put('/userStoryTextMessages', userStoryTextMessagesRoutes.put);
 
 app.get("/show", (req, res) => {
   var workbook = XLSX.readFile("BestFriends_LoriTaylor_CSV.xlsx");
@@ -127,12 +132,6 @@ app.post("/importStory", (req, res) => {
   //   .then((model) => res.json(model))
   //   .catch((err) => console.log(err));
 });
-
-app.get('/users', usersRoutes.get)
-
-app.get('/userStoryTextMessages', userStoryTextMessagesRoutes.get);
-app.post('/userStoryTextMessages', userStoryTextMessagesRoutes.post);
-app.put('/userStoryTextMessages', userStoryTextMessagesRoutes.put);
 
 app.get('/stories', (req, res) => {
   Story.find({})
