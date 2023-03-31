@@ -4,6 +4,13 @@ const UserStoryTextMessages = require('../../models/UserStoryTextMessages');
 const get = async (req, res) => {
   const { storyId } = req.query;
 
+  const currentDate = new Date();
+  const updatedTimestamp = currentDate.getTime() + (1 * 60 * 60 * 1000);
+  const updatedDate = new Date(updatedTimestamp);
+  const updatedISOString = updatedDate.toISOString();
+
+  // fetch messages available from now on + 1 hour. 
+  // The messages could be fetched from the server every hour
   // const availableMessages = await UserStoryTextMessages.find({ userId: req.__user__.id, storyId: storyId, enabledAt: { $lte: new Date().toISOString() }})
   const availableMessages = await UserStoryTextMessages.find({ userId: req.__user__.id, storyId: storyId })
   if (!availableMessages) {
