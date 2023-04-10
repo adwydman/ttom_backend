@@ -2,6 +2,7 @@ const User = require('../../models/User');
 const Story = require('../../models/Story');
 const Conversation = require('../../models/Conversation');
 const UserStoryTextMessages = require('../../models/UserStoryTextMessages');
+const { getStoryInfo } = require('../aggregations');
 
 const post = async (req, res) => {
   const { storyId } = req.body;
@@ -42,12 +43,17 @@ const post = async (req, res) => {
 
   const [_, updatedUser] = await Promise.all([
     UserStoryTextMessages.insertMany(insertInfo),
-    req.__user__.save()
+    req.__user__.save(),
   ]);
-  
+
+  const storyInfo = await getStoryInfo(updatedUser._id.toString())
+
+  const serializedUser = User.__serialize__(updatedUser);
+  serializedUser.storyInfo = storyInfo;
+
   return res
     .status(201)
-    .json({ user: User.__serialize__(updatedUser) })
+    .json({ user: serializedUser })
 }
 
 module.exports = post;

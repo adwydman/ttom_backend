@@ -1,7 +1,7 @@
 const User = require("../models/User");
 
 const authenticateUser = async (req, res, next) => {
-  const nonSecurePaths = ['/', '/login', '/register', '/upload'];
+  const nonSecurePaths = ['/', '/login', '/register', '/upload', '/stories'];
   if (nonSecurePaths.includes(req.path)) {
     return next();
   }
