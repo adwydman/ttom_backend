@@ -15,6 +15,7 @@ const loginRoute = require('./routes/login');
 const registerRoute = require('./routes/register');
 const userStoryTextMessagesRoutes = require('./routes/userStoryTextMessages');
 const usersRoutes = require('./routes/users');
+const storiesRoutes = require('./routes/stories');
 const hooks = require('./routes/hooks');
 
 const app = (module.exports.app = express());
@@ -61,14 +62,8 @@ app.get('/userStoryTextMessages', userStoryTextMessagesRoutes.get);
 app.post('/userStoryTextMessages', userStoryTextMessagesRoutes.post);
 app.put('/userStoryTextMessages', userStoryTextMessagesRoutes.put);
 
-app.get("/show", (req, res) => {
-  var workbook = XLSX.readFile("BestFriends_LoriTaylor_CSV.xlsx");
-  var sheet_name_list = workbook.SheetNames;
-  var xlData = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]], {
-    raw: false,
-  });
-  console.log(xlData);
-});
+app.get('/stories', storiesRoutes.get);
+app.get('/stories/:id', storiesRoutes.getById);
 
 app.post('/upload', upload.single('csv'), (req, res) => {
   // Use csvtojson to parse the CSV file to JSON
@@ -84,44 +79,6 @@ app.post('/upload', upload.single('csv'), (req, res) => {
     });
 });
 
-app.post("/importStory", (req, res) => {
-  // check if exists
-  // var workbook = XLSX.readFile("BestFriends_LoriTaylor_CSV.xlsx");
-  // var sheet_name_list = workbook.SheetNames;
-  // var xlData = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]], {
-  //   raw: false,
-  // });
-  // const story = new Story({
-  //   name: "Favourites Landscape",
-  //   category: "Romacnce",
-  //   author: "Haidar Iqbal",
-  //   picture: "https://i.imgur.com/UPrs1EWl.jpg",
-  // });
-  // story
-  //   .save()
-  //   .then((model) => res.json(model))
-  //   .catch((err) => console.log(err));
-});
-
-app.get('/stories', async (req, res) => {
-  Story.find({})
-    .then((story) => {
-      res.json(story);
-    })
-})
-
-app.get('/story', (req, res) => {
-  Story.find({ name: 'The Actress And The Painter' })
-    .then((story) => {
-      res.json(story);
-    })
-})
-
-app.get("/getSoriesList", (req, res) => {
-  Story.find({}).then((list) => {
-    res.send(list);
-  });
-});
 
 app.get("/getStoryDetails/:storyKey", (req, res) => {
   let storyId = req.params.storyKey;
@@ -140,7 +97,6 @@ app.get("/getStoryDetails/:storyKey", (req, res) => {
 //     picture: "https://i.imgur.com/u4STAok.png",
 //     description: "Description",
 //     duration: "1 week",
-//     mainCharacter: "Patrick",
 //   });
 //   story
 //     .save()
