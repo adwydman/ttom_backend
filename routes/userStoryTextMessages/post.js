@@ -24,11 +24,12 @@ const post = async (req, res) => {
   const conversations = await Conversation.find({ storyId })
 
   const insertInfo = [];
-  const enabledAt = new Date();
   for (let i = 0; i < conversations.length; i++) {
+    const enabledAt = new Date();
     const conversation = conversations[i];
     const [hours, minutes, seconds] = conversation.time.split(':');
     enabledAt.setHours(hours, minutes, seconds);
+    console.log('enabledAtAfter', enabledAt)
     enabledAt.setDate(enabledAt.getDate() + (conversation.dayNumber - 1));
 
     insertInfo.push({

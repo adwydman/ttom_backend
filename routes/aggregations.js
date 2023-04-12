@@ -66,7 +66,7 @@ const getStoryInfo = async (userId) => {
     },
   ]);
 
-  console.log("result", result);
+  // console.log("result", result);
 
   return result;
 };
