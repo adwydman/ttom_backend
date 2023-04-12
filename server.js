@@ -16,7 +16,7 @@ const registerRoute = require('./routes/register');
 const userStoryTextMessagesRoutes = require('./routes/userStoryTextMessages');
 const usersRoutes = require('./routes/users');
 const storiesRoutes = require('./routes/stories');
-const hooks = require('./routes/hooks');
+const middleware = require('./routes/middleware');
 
 const app = (module.exports.app = express());
 
@@ -38,7 +38,7 @@ app.use(
   })
 );
 
-app.use(hooks.authenticateUser)
+app.use(middleware.authenticateUser)
 
 mongoose
   .connect(db, {
