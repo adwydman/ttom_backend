@@ -27,10 +27,14 @@ const post = async (req, res) => {
   for (let i = 0; i < conversations.length; i++) {
     const enabledAt = new Date();
     const conversation = conversations[i];
-    const [hours, minutes, seconds] = conversation.time.split(':');
-    enabledAt.setHours(hours, minutes, seconds);
-    console.log('enabledAtAfter', enabledAt)
-    enabledAt.setDate(enabledAt.getDate() + (conversation.dayNumber - 1));
+
+    if (story.name === 'Test Story') {
+      enabledAt.setMinutes(enabledAt.getMinutes() + 1 * (i + 1));
+    } else {
+      const [hours, minutes, seconds] = conversation.time.split(':');
+      enabledAt.setHours(hours, minutes, seconds);
+      enabledAt.setDate(enabledAt.getDate() + (conversation.dayNumber - 1));
+    }
 
     insertInfo.push({
       userId: req.__user__._id,
