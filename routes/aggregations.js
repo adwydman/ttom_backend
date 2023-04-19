@@ -36,7 +36,8 @@ const getStoryInfo = async (userId) => {
                 {
                   $match: {
                     enabledAt: {
-                      $lte: moment("2034-01-01T00:00:00Z").toDate(),
+                      $lte: moment().toDate(), // change to moment()
+                      // $lte: moment("2034-01-01T00:00:00Z").toDate(), // change to moment()
                     },
                   },
                 },
@@ -71,6 +72,58 @@ const getStoryInfo = async (userId) => {
   return result;
 };
 
+const getStoryConversations = async (userId, storyId, enabledAt) => {
+  const result = await UserStoryTextMessages.aggregate([
+    {
+      $match: {
+        userId,
+        storyId,
+        // enabledAt: { $lte: updatedISOString },
+      },
+    },
+    {
+      $addFields: {
+        conversationIdObjectId: { $toObjectId: '$conversationId' },
+      },
+    },
+    {
+      $lookup: {
+        from: 'conversations',
+        localField: 'conversationIdObjectId',
+        foreignField: '_id',
+        as: 'conversation',
+      },
+    },
+    {
+      $unwind: '$conversation',
+    },
+    {
+      $addFields: {
+        'conversation.seenByUser': '$seenByUser',
+        'conversation.notificationSent': '$notificationSent',
+        'conversation.enabledAt': '$enabledAt',
+      },
+    },
+    {
+      $replaceRoot: { newRoot: '$conversation' },
+    },
+    {
+      $addFields: {
+        order: '$dayNumber',
+      },
+    },
+    {
+      $sort: {
+        dayNumber: 1,
+        time: 1,
+      },
+    },
+  ]);
+
+  return result;
+}
+
 module.exports = {
-  getStoryInfo
+  getStoryInfo,
+  getStoryConversations,
 }

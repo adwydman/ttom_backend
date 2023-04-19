@@ -29,7 +29,8 @@ const post = async (req, res) => {
     const conversation = conversations[i];
 
     if (story.name === 'Test Story') {
-      enabledAt.setMinutes(enabledAt.getMinutes() + 1 * (i + 1));
+      // enabledAt.setMinutes(enabledAt.getMinutes() + 1 * (i + 1));
+      enabledAt.setSeconds(enabledAt.getSeconds() + 30 * (i + 1));
     } else {
       const [hours, minutes, seconds] = conversation.time.split(':');
       enabledAt.setHours(hours, minutes, seconds);
