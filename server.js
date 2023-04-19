@@ -10,6 +10,7 @@ const XLSX = require("xlsx");
 const keys = require("./config/Keys.js");
 const Story = require("./models/Story");
 const Conversation = require("./models/Conversation");
+const Picture = require("./models/Picture");
 
 const loginRoute = require('./routes/login');
 const registerRoute = require('./routes/register');
@@ -49,7 +50,7 @@ mongoose
     console.log("MongoDB successfully connected")
   })
   .catch((err) => console.log(err));
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
   res.send("yo connected");
 });
 
@@ -89,6 +90,51 @@ app.get("/getStoryDetails/:storyKey", (req, res) => {
   });
 });
 
+
+// const pictures = [
+//   {
+//     "url": "https://i.imgur.com/9bB8wbg.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/FeUPSga.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/tmNF4rg.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/u3XW0V7.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/p02NUTg.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/Oq0rkLE.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/b0YImpZ.png",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/96CEsEr.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/uwejahc.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+//   {
+//     "url": "https://i.imgur.com/HW3E1jv.jpg",
+//     "storyId": "643364ca07e4ed91ad81015a"
+//   },
+// ]
+
+// await Picture.insertMany(pictures);
 
 // const story = new Story({
 //     name: "Love at First Flight",

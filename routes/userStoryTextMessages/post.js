@@ -1,11 +1,14 @@
 const User = require('../../models/User');
 const Story = require('../../models/Story');
+const Picture = require('../../models/Picture');
 const Conversation = require('../../models/Conversation');
 const UserStoryTextMessages = require('../../models/UserStoryTextMessages');
+const UserPictures = require('../../models/UserPictures');
 const { getStoryInfo } = require('../aggregations');
 
 const post = async (req, res) => {
   const { storyId } = req.body;
+  const userId = req.__user__._id;
 
   const story = await Story.findOne({ _id: storyId });
   if (!story) {
@@ -14,7 +17,7 @@ const post = async (req, res) => {
       .json({ message: `Story with id: ${storyId} not found` });
   }
 
-  const existingConversation = await UserStoryTextMessages.findOne({ userId: req.__user__._id, storyId: storyId });
+  const existingConversation = await UserStoryTextMessages.findOne({ userId: userId, storyId: storyId });
   if (existingConversation) {
     return res
       .status(422)
@@ -22,8 +25,9 @@ const post = async (req, res) => {
   }
 
   const conversations = await Conversation.find({ storyId }).sort({ dayNumber: 1, time: 1 });
+  const pictures = await Picture.find({ storyId });
 
-  const insertInfo = [];
+  const userStoryTextMessagesArray = [];
   for (let i = 0; i < conversations.length; i++) {
     const enabledAt = new Date();
     const conversation = conversations[i];
@@ -37,18 +41,39 @@ const post = async (req, res) => {
       enabledAt.setDate(enabledAt.getDate() + (conversation.dayNumber - 1));
     }
 
-    insertInfo.push({
-      userId: req.__user__._id,
+    userStoryTextMessagesArray.push({
+      userId: userId,
       storyId: storyId,
       conversationId: conversation._id,
       enabledAt: enabledAt,
     })
   }
 
+  const userPictures = [];
+  for (let i = 0; i < pictures.length; i++) {
+    const picture = pictures[i];
+    const pictureData = {
+      userId: userId,
+      storyId: storyId,
+      pictureId: picture._id,
+    };
+
+    if (picture.dayNumber && picture.time) {
+      const enabledAt = new Date();
+      const [hours, minutes, seconds] = picture.time.split(':');
+      enabledAt.setHours(hours, minutes, seconds);
+      enabledAt.setDate(enabledAt.getDate() + (picture.dayNumber - 1));
+      pictureData.enabledAt = enabledAt;
+    }
+  
+    userPictures.push(pictureData) 
+  }
+
   req.__user__.stories.push(storyId)
 
-  const [_, updatedUser] = await Promise.all([
-    UserStoryTextMessages.insertMany(insertInfo),
+  const [_, _2, updatedUser] = await Promise.all([
+    UserStoryTextMessages.insertMany(userStoryTextMessagesArray),
+    UserPictures.insertMany(userPictures),
     req.__user__.save(),
   ]);
 
