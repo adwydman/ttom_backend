@@ -21,7 +21,7 @@ const post = async (req, res) => {
       .json({ message: 'Conversations already added for user'})
   }
 
-  const conversations = await Conversation.find({ storyId })
+  const conversations = await Conversation.find({ storyId }).sort({ dayNumber: 1, time: 1 });
 
   const insertInfo = [];
   for (let i = 0; i < conversations.length; i++) {
@@ -59,7 +59,7 @@ const post = async (req, res) => {
 
   return res
     .status(201)
-    .json({ user: serializedUser })
+    .json({ user: serializedUser, firstMessage: conversations[0] })
 }
 
 module.exports = post;

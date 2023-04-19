@@ -35,6 +35,10 @@ const StorySchema = new Schema({
     type: Array,
     required: true,
   },
+  mainCharacter: {
+    type: String,
+    required: true,
+  },
 });
 
 module.exports = Story = mongoose.model("Story", StorySchema);
