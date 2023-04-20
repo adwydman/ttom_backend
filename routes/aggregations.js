@@ -1,4 +1,5 @@
 const moment = require('moment');
+const UserPictures = require('../models/UserPictures');
 const UserStoryTextMessages = require('../models/UserStoryTextMessages');
 
 const getStoryInfo = async (userId) => {
@@ -123,7 +124,54 @@ const getStoryConversations = async (userId, storyId, enabledAt) => {
   return result;
 }
 
+const getStoryPhotos = async (userId, storyId, enabledAt) => {
+  const result = await UserPictures.aggregate([
+    { $match: { userId, storyId } },
+    {
+      $addFields: {
+        pictureIdObjectId: { $toObjectId: '$pictureId' },
+      }
+    },
+    {
+      $lookup: {
+        from: 'pictures',
+        localField: 'pictureIdObjectId',
+        foreignField: '_id',
+        as: 'picture',
+      }
+    },
+    {
+      $unwind: '$picture',
+    },
+    // {
+    //   $addFields: {
+    //     'picture.url': '$url',
+    //     'picture.enabledAt': '$enabledAt',
+    //   }
+    // },
+    {
+      $replaceRoot: { newRoot: '$picture' },
+    },
+    // {
+    //   $addFields: {
+    //     order: '$dayNumber',
+    //   }
+    // },
+    // {
+    //   $sort: {
+    //     dayNumber: 1,
+    //     time: 1,
+    //   },
+    // },
+  ]);
+
+  console.log('result', result)
+
+  return result;
+};
+
 module.exports = {
   getStoryInfo,
   getStoryConversations,
+  getStoryPhotos,
 }

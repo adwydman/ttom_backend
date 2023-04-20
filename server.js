@@ -93,43 +93,43 @@ app.get("/getStoryDetails/:storyKey", (req, res) => {
 
 // const pictures = [
 //   {
-//     "url": "https://i.imgur.com/9bB8wbg.jpg",
+//     "url": "https://i.imgur.com/7aCKcS0.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/FeUPSga.jpg",
+//     "url": "https://i.imgur.com/fZMlTME.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/tmNF4rg.jpg",
+//     "url": "https://i.imgur.com/sTJTuh3.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/u3XW0V7.jpg",
+//     "url": "https://i.imgur.com/eSPzPIW.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/p02NUTg.jpg",
+//     "url": "https://i.imgur.com/s1NsHwi.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/Oq0rkLE.jpg",
+//     "url": "https://i.imgur.com/8vgk4MT.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/b0YImpZ.png",
+//     "url": "https://i.imgur.com/WRUqzYM.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/96CEsEr.jpg",
+//     "url": "https://i.imgur.com/8C9WOqY.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/uwejahc.jpg",
+//     "url": "https://i.imgur.com/LHJ2jC6.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 //   {
-//     "url": "https://i.imgur.com/HW3E1jv.jpg",
+//     "url": "https://i.imgur.com/9NhbjlB.jpg",
 //     "storyId": "643364ca07e4ed91ad81015a"
 //   },
 // ]

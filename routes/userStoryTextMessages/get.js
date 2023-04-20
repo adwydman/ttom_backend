@@ -1,4 +1,4 @@
-const { getStoryConversations } = require('../aggregations');
+const { getStoryConversations, getStoryPhotos } = require('../aggregations');
 const UserPictures = require('../../models/UserPictures');
 
 const get = async (req, res) => {
@@ -13,11 +13,11 @@ const get = async (req, res) => {
   // The messages could be fetched from the server every hour
 
   const userStoryTextMessages = await getStoryConversations(req.__user__.id, storyId, updatedISOString);
-  const userPictures = await UserPictures.find({ userId: req.__user__.id, storyId });
+  const userPhotos = await getStoryPhotos(req.__user__.id, storyId, updatedISOString);
 
   return res
     .status(200)
-    .json({ userStoryTextMessages, userPictures });
+    .json({ userStoryTextMessages, userPhotos });
 }
 
 module.exports = get;
