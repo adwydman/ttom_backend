@@ -111,16 +111,30 @@ const getStoryConversations = async (userId, storyId, enabledAt) => {
     {
       $addFields: {
         order: '$dayNumber',
+        timeInSeconds: {
+          $let: {
+            vars: {
+              timeComponents: { $split: ['$time', ':'] },
+            },
+            in: {
+              $sum: [
+                { $multiply: [{ $toInt: { $arrayElemAt: ['$$timeComponents', 0] } }, 3600] },
+                { $multiply: [{ $toInt: { $arrayElemAt: ['$$timeComponents', 1] } }, 60] },
+                { $toInt: { $arrayElemAt: ['$$timeComponents', 2] } },
+              ],
+            },
+          },
+        },
       },
     },
     {
       $sort: {
         dayNumber: 1,
-        time: 1,
+        timeInSeconds: 1,
       },
     },
   ]);
-
+  
   return result;
 }
 

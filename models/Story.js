@@ -29,16 +29,17 @@ const StorySchema = new Schema({
   },
   duration: {
     type: String,
-    required: true,
+    // required: true,
   },
   categories: {
     type: Array,
-    required: true,
+    // required: true,
   },
   mainCharacter: {
     type: String,
     required: true,
   },
+  // todo: add approved by admin
 });
 
 module.exports = Story = mongoose.model("Story", StorySchema);

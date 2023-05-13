@@ -398,6 +398,13 @@
   "resolved" "https://registry.npmjs.org/crypto-random-string/-/crypto-random-string-2.0.0.tgz"
   "version" "2.0.0"
 
+"csv-parser@^3.0.0":
+  "integrity" "sha512-s6OYSXAK3IdKqYO33y09jhypG/bSDHPuyCme/IdEHfWpLf/jKcpitVFyOC6UemgGk8v7Q5u2XE0vvwmanxhGlQ=="
+  "resolved" "https://registry.npmjs.org/csv-parser/-/csv-parser-3.0.0.tgz"
+  "version" "3.0.0"
+  dependencies:
+    "minimist" "^1.2.0"
+
 "csvtojson@^2.0.10":
   "integrity" "sha512-lUWFxGKyhraKCW8Qghz6Z0f2l/PqB1W3AO0HKJzGIQ5JRSlR651ekJDiGJbBT4sRNNv5ddnSGVEnsxP9XRCVpQ=="
   "resolved" "https://registry.npmjs.org/csvtojson/-/csvtojson-2.0.10.tgz"

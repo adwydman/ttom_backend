@@ -4,12 +4,15 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const multer = require('multer');
+const csvParser = require('csv-parser');
+const fs = require('fs');
 const csv = require('csvtojson');
 const XLSX = require("xlsx");
 
 const keys = require("./config/Keys.js");
 const Story = require("./models/Story");
 const Conversation = require("./models/Conversation");
+const UserStoryTextMessages = require("./models/UserStoryTextMessages");
 const Picture = require("./models/Picture");
 
 const loginRoute = require('./routes/login');
@@ -28,8 +31,16 @@ server.listen(port, '10.0.0.74', () => {
   console.log("listening on port 3000");
 });
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const csvStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'csv-files');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({ storage: csvStorage });
+
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -51,6 +62,8 @@ mongoose
   })
   .catch((err) => console.log(err));
 app.get("/", async (req, res) => {
+  // await Conversation.deleteMany({ storyId: '644343b8bc82ee6608552116' });
+  // await UserStoryTextMessages.deleteMany({ storyId: '644343b8bc82ee6608552116' });
   res.send("yo connected");
 });
 
@@ -66,17 +79,49 @@ app.put('/userStoryTextMessages', userStoryTextMessagesRoutes.put);
 app.get('/stories', storiesRoutes.get);
 app.get('/stories/:id', storiesRoutes.getById);
 
-app.post('/upload', upload.single('csv'), (req, res) => {
-  // Use csvtojson to parse the CSV file to JSON
+app.post('/upload', upload.single('csvFile'), async (req, res) => {
+  const { title, author, pictureUrl, description, mainCharacter } = req.body;
+  const file = req.file;
 
-  csv().fromString(req.file.buffer.toString())
-    .then((json) => {
-      // Send the JSON back to the client
-      res.status(200).json({message: 'OK' });
+  const story = await Story.create({
+    name: title,
+    picture: pictureUrl,
+    author: author,
+    description: description,
+    mainCharacter: mainCharacter,
+  })
+
+  const jsonData = [];
+
+  fs.createReadStream(file.path)
+    .pipe(csvParser({
+      headers: ['dayNumber', 'time', 'messageType', 'whoFrom', 'whoTo', 'message'],
+      skipLines: 1
+    }))
+    .on('data', (row) => {
+      row.storyId = story._id;
+      jsonData.push(row);
     })
-    .catch((err) => {
-      console.log(err);
-      res.sendStatus(500);
+    .on('end', () => {
+      Conversation.insertMany(jsonData, (err, docs) => {
+        if (err) {
+          console.log('error', err)
+        }
+        console.log('docs', docs)
+      })
+      
+      // Perform any operations on jsonData, such as filtering, sorting, or modifying the data
+      // You can store the result in memory, database, or use it for any purpose
+
+      // Remove the temporary CSV file
+      fs.unlinkSync(file.path);
+
+      res.status(200).json({
+        title,
+        author,
+        mainCharacter,
+        data: jsonData
+      });
     });
 });
 

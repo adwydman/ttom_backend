@@ -1,5 +1,4 @@
 const { getStoryConversations, getStoryPhotos } = require('../aggregations');
-const UserPictures = require('../../models/UserPictures');
 
 const get = async (req, res) => {
   const { storyId } = req.query;
