@@ -6,6 +6,8 @@ const get = async (req, res) => {
   const storyInfo = await getStoryInfo(req.__user__._id.toString());
   user.storyInfo = storyInfo;
 
+  console.log('users get')
+
   return res
     .status(200)
     .json({ user });
