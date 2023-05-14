@@ -2,16 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+require('dotenv').config();
 
-const keys = require("./config/Keys.js");
 const middleware = require('./routes/middleware');
 const setupRoutes = require('./routes/setup');
 
 const connectDatabase = async () => {
-  const db = keys.mongoURI;
-
-  await mongoose.connect(db, { useNewUrlParser: true, useUnifiedTopology: true });
-  console.log("MongoDB successfully connected")
+  await mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+  console.log('MongoDB successfully connected')
 };
 
 const initApp = () => {
