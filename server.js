@@ -2,19 +2,87 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const AdminBro = require('admin-bro')
+const AdminBroExpress = require('@admin-bro/express')
+const AdminBroMongoose = require('@admin-bro/mongoose')
 require('dotenv').config();
+
+const User = require('./models/User');
+const Story = require('./models/Story');
 
 const middleware = require('./routes/middleware');
 const setupRoutes = require('./routes/setup');
+const loginRoute = require('./routes/login');
 
 const connectDatabase = async () => {
   await mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
   console.log('MongoDB successfully connected')
 };
 
-const initApp = () => {
+const initApp = async () => {
   const app = express();
 
+  AdminBro.registerAdapter(AdminBroMongoose)
+  const adminBro = new AdminBro({
+    resources: [
+    {
+      resource: User,
+      options: {
+        properties: {
+          password: { isVisible: false },
+          token: { isVisible: false },
+          _id: { isVisible: false },
+          username: { isVisible: false },
+          stories: {
+            show: true,
+            list: true,
+            edit: false,
+            filter: false,
+          }
+        },
+        actions: {
+          new: { isVisible: false },
+          delete: { isVisible: false }
+        }
+      }
+    },
+    {
+      resource: Story,
+      name: 'Stories',
+      options: {
+        properties: {
+          _id: { isVisible: false },
+        },
+        actions: {
+          new: {
+            component: AdminBro.bundle('./adminPanel/components/CreateStory')
+          },
+          show: {
+            component: AdminBro.bundle('./adminPanel/components/ShowStory')
+          },
+          delete: { isVisible: false }
+        }
+      }
+    }],
+    locale: {
+      translations: {
+        labels: {
+          Story: 'Stories',
+        }
+      }
+    },
+    branding: {
+      logo: 'https://i.imgur.com/54YPLXH.png'
+    },
+    rootPath: '/admin',
+  })
+  
+  const router = AdminBroExpress.buildAuthenticatedRouter(adminBro, {
+    authenticate: loginRoute.loginAdminPanel,
+    cookiePassword: 'some-secret-password-used-to-secure-cookie',
+  })
+
+  app.use(adminBro.options.rootPath, router)
   app.use(cors());
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));

@@ -20,7 +20,7 @@ const setup = (app) => {
 
   app.get("/", async (req, res) => { res.send("yo connected") });
 
-  app.post("/login", loginRoute);
+  app.post("/login", loginRoute.login);
   app.post("/register", registerRoute);
 
   app.get('/users', usersRoutes.get)

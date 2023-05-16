@@ -38,4 +38,24 @@ const login = async (req, res) => {
     .json({ user: serializedUser });
 }
 
-module.exports = login;
+const loginAdminPanel = async (email, password) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return false;
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return false;
+  }
+
+  //todo: check if the user is admin
+
+  return user;
+}
+
+module.exports = {
+  login,
+  loginAdminPanel
+};
