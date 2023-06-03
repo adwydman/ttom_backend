@@ -1,12 +1,13 @@
 const fs = require("fs");
+const csvParser = require('csv-parser');
 const Story = require("../../models/Story");
 const Conversation = require("../../models/Conversation");
 
 const post = async (req, res) => {
-  const { title, author, pictureUrl, description, mainCharacter } = req.body;
+  const { title, author, pictureUrl, description, mainCharacter, preview } = req.body;
   const file = req.file;
 
-  const story = await Story.create({
+  const story = new Story({
     name: title,
     picture: pictureUrl,
     author: author,
@@ -15,6 +16,7 @@ const post = async (req, res) => {
   })
 
   const jsonData = [];
+  let response = [];
 
   fs.createReadStream(file.path)
     .pipe(csvParser({
@@ -22,19 +24,11 @@ const post = async (req, res) => {
       skipLines: 1
     }))
     .on('data', (row) => {
-      row.storyId = story._id;
+      // row.storyId = story._id;
       jsonData.push(row);
     })
     .on('end', () => {
-      Conversation.insertMany(jsonData, (err, docs) => {
-        if (err) {
-          console.log('error', err)
-        }
-        console.log('docs', docs)
-      })
-      
-      // Perform any operations on jsonData, such as filtering, sorting, or modifying the data
-      // You can store the result in memory, database, or use it for any purpose
+      const response = jsonData.map((jsonRecord) => new Conversation(jsonRecord));
 
       // Remove the temporary CSV file
       fs.unlinkSync(file.path);
@@ -43,7 +37,7 @@ const post = async (req, res) => {
         title,
         author,
         mainCharacter,
-        data: jsonData
+        data: response
       });
     });
 }

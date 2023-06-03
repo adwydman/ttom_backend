@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useCurrentAdmin } from 'admin-bro';
 import styled from 'styled-components';
+import { generateConversationClusters } from '../utils/utils';
 import { config } from '../utils/config';
+import { TextMessages } from './TextMessages';
 
 const FormRow = styled.div`
   display: flex;
@@ -17,12 +19,14 @@ const UploadForm = (props) => {
   const [description, setDescription] = useState('');
   const [pictureUrl, setPictureUrl] = useState('');
   const [mainCharacter, setMainCharacter] = useState('');
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [storyPreview, setStoryPreview] = useState(null);
 
   const handleFileUpload = (event) => {
     setCsvFile(event.target.files[0]);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!csvFile) {
       alert('Csv file is required!')
@@ -35,18 +39,51 @@ const UploadForm = (props) => {
     formData.append('description', description);
     formData.append('pictureUrl', pictureUrl);
     formData.append('mainCharacter', mainCharacter);
+    formData.append('preview', true)
 
-    fetch(`${config.backendUrl}/upload`, {
+    const fetchResponse = await fetch(`${config.backendUrl}/upload`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${currentAdmin.token}`
       },
       body: formData,
     })
-      .then((response) => response.json())
-      .then((data) => console.log(data))
-      .catch((error) => console.error(error));
+    const result = await fetchResponse.json();
+    console.log('result', result.data)
+
+    const uploadedStory = generateConversationClusters(result.data);
+
+    setStoryPreview(uploadedStory);
   };
+
+  if (Boolean(storyPreview)) {
+    return (
+      <>
+        <div style={{marginBottom: '20px'}}>
+          <button onClick={() => {
+            setStoryPreview(null);
+            setSelectedConversation(null);
+          }}>Go back</button>
+        </div>
+        <div>
+          {Object.keys(storyPreview).map((contactName) => {
+            const orderValues = storyPreview[contactName].map((c) => c.__order__);
+
+            return (
+              <div key={contactName}>
+                <button onClick={() => {
+                  setSelectedConversation(contactName)
+                }}>
+                  {contactName} ({orderValues.join(', ')})
+                </button>
+              </div>
+            )
+          })}
+        </div>
+        { selectedConversation && <TextMessages textMessages={storyPreview[selectedConversation]} /> }
+      </>
+    )
+  }
 
   return (
     <div>
