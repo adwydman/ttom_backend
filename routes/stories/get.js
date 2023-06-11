@@ -5,7 +5,15 @@ const get = async (req, res) => {
     const fields = req.query.fields ? req.query.fields.replace(/,/g, ' ') : '';
 
     const stories = await Story.find({}, fields);
-    res.json(stories);
+    const filteredStory = stories.filter((story) => {
+      if (req.__user__.type === 'admin') {
+        return true;
+      }
+
+      return story.isApproved;
+    });
+
+    res.json(filteredStory);
   } catch (error) {
     console.error(error);
     res.status(500).send('Server error');

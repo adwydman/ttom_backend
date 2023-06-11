@@ -39,7 +39,10 @@ const StorySchema = new Schema({
     type: String,
     required: true,
   },
-  // todo: add approved by admin
+  isApproved: {
+    type: Boolean,
+    default: false
+  }
 });
 
 module.exports = Story = mongoose.model("Story", StorySchema);

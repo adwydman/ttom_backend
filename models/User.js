@@ -43,7 +43,8 @@ User.__serialize__ = (user) => {
     email: user.email,
     stories: user.stories,
     createdAt: user.created_on,
-    token: user.token
+    token: user.token,
+    type: user.type
   };
 }
 
