@@ -12,7 +12,7 @@ const UserSchema = new Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
   },
   stories: {
     type: Array,
@@ -34,6 +34,10 @@ const UserSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  isThirdParty: {
+    type: Boolean,
+    default: false,
+  }
 })
 
 const User = mongoose.model("Users", UserSchema);

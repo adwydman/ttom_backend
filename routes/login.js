@@ -1,12 +1,55 @@
+const axios = require('axios');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { getStoryInfo } = require('./aggregations');
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, thirdParty, thirdPartyToken } = req.body;
 
-  const user = await User.findOne({ email });
+  console.log('login', thirdParty)
+
+  let emailToProcess = email;
+
+  if (thirdPartyToken) {
+    if (thirdParty === 'google') {
+      try {
+        const response = await axios.get("https://www.googleapis.com/userinfo/v2/me", {
+          headers: { Authorization: `Bearer ${thirdPartyToken}` }
+        });
+
+        emailToProcess = response.data.email;
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          return res
+            .status(401)
+            .json({ message: 'Invalid third-party token' });
+        } else {
+          return res
+            .status(500)
+            .json({ message: 'Something went wrong' });
+        }
+      }
+    } else if (thirdParty === 'facebook') {
+      try {
+        const response = await axios.get(`https://graph.facebook.com/me?access_token=${thirdPartyToken}&fields=id,name,email`);
+
+        emailToProcess = response.data.email;
+      }  catch (error) {
+        if (error.response && error.response.status === 401) {
+          return res
+            .status(401)
+            .json({ message: 'Invalid third-party token' });
+        } else {
+          return res
+            .status(500)
+            .json({ message: 'Something went wrong' });
+        }
+      }
+    }
+  }
+
+  const user = await User.findOne({ email: emailToProcess });
 
   if (!user) {
     return res
@@ -14,14 +57,22 @@ const login = async (req, res) => {
       .json({ message: 'User not found' });
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
+  if (!thirdPartyToken && user.isThirdParty) {
     return res
       .status(401)
-      .json({ message: 'Incorrect username or password' });
+      .json({ message: 'Third party token missing from the request\'s body' });
   }
+
+  if (!thirdPartyToken && !user.isThirdParty) {
+    const isMatch = await bcrypt.compare(password, user.password);
   
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ message: 'Incorrect username or password' });
+    }
+  }
+
   const token = crypto.randomBytes(64).toString('hex');
   user.token = token;
 

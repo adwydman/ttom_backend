@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const AdminBro = require('admin-bro')
 const AdminBroExpress = require('@admin-bro/express')
 const AdminBroMongoose = require('@admin-bro/mongoose')
+const stripe = require("stripe")('sk_test_51NHtSdIjQd3hSRZ1OfJUNBvzd18xDWd7QSsmc2wiuimMTpNThVljYMl9AlW2kBEEcQR6HYsG4Ff4cwsjeX7qmcKC00wbq4HnIE')
 require('dotenv').config();
 
 const User = require('./models/User');
@@ -89,6 +90,30 @@ const initApp = async () => {
   app.use(middleware.authenticateUser)
 
   setupRoutes(app);
+
+  const calculateOrderAmount = (items) => {
+    // Replace this constant with a calculation of the order's amount
+    // Calculate the order total on the server to prevent
+    // people from directly manipulating the amount on the client
+    return 1400;
+  };
+  
+  app.post("/create-payment-intent", async (req, res) => {
+    const { items } = req.body;
+  
+    // Create a PaymentIntent with the order amount and currency
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: calculateOrderAmount(items),
+      currency: "usd",
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
+  
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  });
 
   const port = process.env.PORT || 3000;
   app.listen(port, '10.0.0.74', () => console.log(`listening on port ${port}`));
