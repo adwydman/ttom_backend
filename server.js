@@ -91,28 +91,36 @@ const initApp = async () => {
 
   setupRoutes(app);
 
-  const calculateOrderAmount = (items) => {
+  const calculateOrderAmount = () => {
     // Replace this constant with a calculation of the order's amount
     // Calculate the order total on the server to prevent
     // people from directly manipulating the amount on the client
-    return 1400;
+    return 1400; // in cents
   };
   
-  app.post("/create-payment-intent", async (req, res) => {
-    const { items } = req.body;
+  app.post("/intents", async (req, res) => {
+    const { storyId } = req.body;
+
+    console.log('storyId', storyId);
   
-    // Create a PaymentIntent with the order amount and currency
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: calculateOrderAmount(items),
-      currency: "usd",
-      automatic_payment_methods: {
-        enabled: true,
-      },
-    });
-  
-    res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
+    try {
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: calculateOrderAmount(),
+        currency: "usd",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+    
+      res
+        .status(201)
+        .send({
+          clientSecret: paymentIntent.client_secret,
+        });
+    } catch(e) {
+      res.status(400);
+    }
   });
 
   const port = process.env.PORT || 3000;
